@@ -64,6 +64,13 @@ describe("parsePlanJson", () => {
     expect(sg?.priorValues).toBeUndefined();
   });
 
+  it("correctly maps resource type and name fields", () => {
+    const result = parsePlanJson(VALID_PLAN_JSON);
+    const web = result.resources.find((r) => r.address === "aws_instance.web");
+    expect(web?.type).toBe("aws_instance");
+    expect(web?.name).toBe("web");
+  });
+
   it("throws on invalid JSON", () => {
     expect(() => parsePlanJson("not-json")).toThrow("Failed to parse Terraform plan JSON");
   });

@@ -1,43 +1,45 @@
-export interface TerraformPlanResource {
-  id: string;
+export interface PlannedResource {
+  address: string;
   type: string;
   name: string;
-  attributes: Record<string, unknown>;
+  plannedAttributes: Record<string, unknown>;
 }
 
 export interface LiveResource {
-  id: string;
-  type: string;
+  address: string;
   attributes: Record<string, unknown>;
-}
-
-export enum DriftStatus {
-  OK = 'OK',
-  DRIFTED = 'DRIFTED',
-  MISSING = 'MISSING',
-  UNPLANNED = 'UNPLANNED',
 }
 
 export interface DriftedAttribute {
   key: string;
-  plannedValue?: unknown;
-  liveValue?: unknown;
+  planned: unknown;
+  live: unknown;
 }
 
-export interface DriftResult {
-  resourceId: string;
-  resourceType: string;
-  status: DriftStatus;
-  driftedAttributes: string[];
-  message: string;
+export interface ResourceDriftResult {
+  address: string;
+  plannedAttributes: Record<string, unknown>;
+  liveAttributes: Record<string, unknown>;
+  driftedAttributes: DriftedAttribute[];
 }
 
 export interface DriftReport {
-  timestamp: string;
-  totalResources: number;
-  driftedCount: number;
-  missingCount: number;
-  unplannedCount: number;
-  okCount: number;
-  results: DriftResult[];
+  planHash: string;
+  hasDrift: boolean;
+  resources: ResourceDriftResult[];
+  generatedAt: string;
+}
+
+export interface BaselineOptions {
+  baselinePath: string;
+  updateBaseline?: boolean;
+  failOnNewResources?: boolean;
+}
+
+export interface DriftCheckOptions {
+  planPath: string;
+  liveStatePath?: string;
+  baseline?: BaselineOptions;
+  outputFormat?: "text" | "json";
+  exitOnDrift?: boolean;
 }

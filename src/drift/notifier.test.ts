@@ -36,6 +36,17 @@ describe('notify - stdout', () => {
     expect(result.channel).toBe('stdout');
     expect(writeSpy).toHaveBeenCalledOnce();
   });
+
+  it('includes drift summary in stdout output', async () => {
+    let output = '';
+    vi.spyOn(process.stdout, 'write').mockImplementation((chunk) => {
+      output += chunk.toString();
+      return true;
+    });
+    await notify(mockReport, { channel: 'stdout' });
+    expect(output).toContain('aws_instance');
+    expect(output).toContain('instance_type');
+  });
 });
 
 describe('notify - slack', () => {
@@ -52,6 +63,15 @@ describe('notify - slack', () => {
     const result = await notify(cleanReport, config);
     expect(result.success).toBe(true);
     expect(fetchMock).toHaveBeenCalledWith('https://hooks.slack.com/test', expect.objectContaining({ method: 'POST' }));
+  });
+
+  it('returns failure when slack webhook responds with non-ok status', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: false, status: 403 });
+    vi.stubGlobal('fetch', fetchMock);
+    const config: NotifierConfig = { channel: 'slack', webhookUrl: 'https://hooks.slack.com/test' };
+    const result = await notify(mockReport, config);
+    expect(result.success).toBe(false);
+    expect(result.message).toMatch(/403/);
   });
 });
 

@@ -39,6 +39,12 @@ describe('buildRemediationConfigFromEnv', () => {
     const config = buildRemediationConfigFromEnv();
     expect(config.maxActions).toBe(10);
   });
+
+  it('ignores non-numeric maxActions env var', () => {
+    process.env.DRIFTCHECK_REMEDIATION_MAX_ACTIONS = 'not-a-number';
+    const config = buildRemediationConfigFromEnv();
+    expect(config.maxActions).toBeUndefined();
+  });
 });
 
 describe('validateRemediationConfig', () => {
@@ -48,6 +54,11 @@ describe('validateRemediationConfig', () => {
 
   it('errors when maxActions <= 0', () => {
     const errors = validateRemediationConfig({ maxActions: 0 });
+    expect(errors).toContain('maxActions must be a positive integer');
+  });
+
+  it('errors when maxActions is negative', () => {
+    const errors = validateRemediationConfig({ maxActions: -5 });
     expect(errors).toContain('maxActions must be a positive integer');
   });
 
@@ -62,5 +73,10 @@ describe('mergeRemediationConfig', () => {
     const config = mergeRemediationConfig({ maxActions: 5 });
     expect(config.maxActions).toBe(5);
     expect(config.dryRun).toBe(true);
+  });
+
+  it('override dryRun=false takes precedence over default', () => {
+    const config = mergeRemediationConfig({ dryRun: false });
+    expect(config.dryRun).toBe(false);
   });
 });

@@ -26,6 +26,14 @@ function formatScoreOutput(score: DriftScore): string {
   return lines.join('\n');
 }
 
+/**
+ * Validates that the provided --fail-on level is one of the accepted severity values.
+ * Returns true if valid, false otherwise.
+ */
+function isValidFailOnLevel(level: string): boolean {
+  return ['low', 'medium', 'high', 'critical'].includes(level);
+}
+
 export function registerScoreCommand(program: Command): void {
   program
     .command('score <plan-file> <state-file>')
@@ -39,6 +47,11 @@ export function registerScoreCommand(program: Command): void {
       }
       if (!fs.existsSync(stateFile)) {
         console.error(`State file not found: ${stateFile}`);
+        process.exit(1);
+      }
+
+      if (!isValidFailOnLevel(options.failOn)) {
+        console.error(`Invalid --fail-on level: "${options.failOn}". Must be one of: low, medium, high, critical`);
         process.exit(1);
       }
 

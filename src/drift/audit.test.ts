@@ -43,6 +43,15 @@ describe('buildAuditEntry', () => {
     expect(entry.hasDrift).toBe(false);
     expect(entry.driftedResources).toBe(0);
   });
+
+  it('includes a timestamp in ISO 8601 format', () => {
+    const before = new Date();
+    const entry = buildAuditEntry(mockReport, 'plan.json', 'ci');
+    const after = new Date();
+    const ts = new Date(entry.timestamp);
+    expect(ts.getTime()).toBeGreaterThanOrEqual(before.getTime());
+    expect(ts.getTime()).toBeLessThanOrEqual(after.getTime());
+  });
 });
 
 describe('loadAuditLog / appendAuditEntry', () => {
@@ -70,6 +79,17 @@ describe('loadAuditLog / appendAuditEntry', () => {
     const log = loadAuditLog(auditPath);
     expect(log.entries).toHaveLength(1);
     expect(log.entries[0].triggeredBy).toBe('schedule');
+  });
+
+  it('accumulates multiple appended entries in order', () => {
+    const first = buildAuditEntry(mockReport, 'plan-1.json', 'ci');
+    const second = buildAuditEntry(mockReport, 'plan-2.json', 'manual');
+    appendAuditEntry(auditPath, first);
+    appendAuditEntry(auditPath, second);
+    const log = loadAuditLog(auditPath);
+    expect(log.entries).toHaveLength(2);
+    expect(log.entries[0].planFile).toBe('plan-1.json');
+    expect(log.entries[1].planFile).toBe('plan-2.json');
   });
 });
 

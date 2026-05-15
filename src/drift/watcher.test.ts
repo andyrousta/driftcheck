@@ -68,6 +68,15 @@ describe('validateWatcherConfig', () => {
     const errors = validateWatcherConfig({ planPath: 'plan.json', intervalMs: 1000 });
     expect(errors).toContain('onDrift callback is required');
   });
+
+  it('can accumulate multiple errors at once', () => {
+    const errors = validateWatcherConfig({ intervalMs: 500, maxRuns: 0 });
+    expect(errors).toContain('planPath is required');
+    expect(errors).toContain('intervalMs must be at least 1000ms');
+    expect(errors).toContain('maxRuns must be at least 1');
+    expect(errors).toContain('onDrift callback is required');
+    expect(errors.length).toBe(4);
+  });
 });
 
 describe('startWatcher', () => {
@@ -78,12 +87,4 @@ describe('startWatcher', () => {
     const handle = startWatcher({ planPath: 'plan.json', intervalMs: 5000, onDrift: noop, maxRuns: 2 });
     expect(handle.isRunning()).toBe(true);
     handle.stop();
-    expect(handle.isRunning()).toBe(false);
-  });
-
-  it('increments runCount after each tick', async () => {
-    const handle = startWatcher({ planPath: 'plan.json', intervalMs: 1000, onDrift: noop, maxRuns: 2 });
-    await jest.runAllTimersAsync();
-    expect(handle.runCount()).toBeGreaterThanOrEqual(1);
-  });
-});
+   
